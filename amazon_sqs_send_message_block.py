@@ -36,23 +36,29 @@ class SQSSendMessage(SQSBase):
     # Should this block include batch sending of messages
 
     def process_signals(self, signals):
+        new_signals = []
         for signal in signals:
             try:
                 self.logger.debug("Sending message via {} queue".format(
                     self.queue_url(signal)))
 
-                self.client.send_message(QueueUrl=self.queue_url(signal),
-                                         DelaySeconds=self.delay_seconds(signal),
-                                         MessageAttributes=self.message_attributes(signal),
-                                         MessageBody=self.message_body(signal))
-
-                # RESPONSE
-                # {
-                #     'MD5OfMessageBody': 'string',
-                #     'MD5OfMessageAttributes': 'string',
-                #     'MessageId': 'string',
-                #     'SequenceNumber': 'string'
-                # }
+                response = self.client.send_message(
+                    QueueUrl=self.queue_url(signal),
+                    DelaySeconds=self.delay_seconds(signal),
+                    MessageAttributes=self.message_attributes(signal),
+                    MessageBody=self.message_body(signal)
+                )
+                new_signals.append(response)
 
             except:
                 self.logger.exception("Message failed to send")
+
+        self.notify_signals(new_signals)
+
+
+    # response = {
+    #     'MD5OfMessageBody': 'string',
+    #     'MD5OfMessageAttributes': 'string',
+    #     'MessageId': 'string',
+    #     'SequenceNumber': 'string'
+    # }

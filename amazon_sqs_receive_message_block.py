@@ -29,12 +29,12 @@ class SQSReceiveMessage(SQSBase):
         # ^ FIFO queues only
 
     def process_signals(self, signals):
+        new_signals = []
         for signal in signals:
             try:
                 self.logger.debug("Sending message via {} queue".format(
                     self.queue_url(signal)))
-
-                self.client.receive_message(
+                response = self.client.receive_message(
                     QueueUrl=self.queue_url(signal),
                     AttributeNames=self.attribute_names(signal),
                     MessageAttributeNames=self.message_attribute_names(signal),
@@ -43,35 +43,38 @@ class SQSReceiveMessage(SQSBase):
                     WaitTimeSeconds= self.wait_time_seconds(signal),
                     ReceiveRequestAttemptId= self.receive_request_attempt_id(signal)
                 )
-
-                # RESPONSE
-                # {
-                #     'Messages': [
-                #         {
-                #             'MessageId': 'string',
-                #             'ReceiptHandle': 'string',
-                #             'MD5OfBody': 'string',
-                #             'Body': 'string',
-                #             'Attributes': {
-                #                 'string': 'string'
-                #             },
-                #             'MD5OfMessageAttributes': 'string',
-                #             'MessageAttributes': {
-                #                 'string': {
-                #                     'StringValue': 'string',
-                #                     'BinaryValue': b'bytes',
-                #                     'StringListValues': [
-                #                         'string',
-                #                     ],
-                #                     'BinaryListValues': [
-                #                         b'bytes',
-                #                     ],
-                #                     'DataType': 'string'
-                #                 }
-                #             }
-                #         },
-                #     ]
-                # }
+                new_signals.append(response)
 
             except:
-                self.logger.exception("Message failed to send")
+                self.logger.exception("Message was not received")
+
+        self.notify_signals(new_signals)
+
+
+    # response = {
+    #     'Messages': [
+    #         {
+    #             'MessageId': 'string',
+    #             'ReceiptHandle': 'string',
+    #             'MD5OfBody': 'string',
+    #             'Body': 'string',
+    #             'Attributes': {
+    #                 'string': 'string'
+    #             },
+    #             'MD5OfMessageAttributes': 'string',
+    #             'MessageAttributes': {
+    #                 'string': {
+    #                     'StringValue': 'string',
+    #                     'BinaryValue': b'bytes',
+    #                     'StringListValues': [
+    #                         'string',
+    #                     ],
+    #                     'BinaryListValues': [
+    #                         b'bytes',
+    #                     ],
+    #                     'DataType': 'string'
+    #                 }
+    #             }
+    #         },
+    #     ]
+    # }
