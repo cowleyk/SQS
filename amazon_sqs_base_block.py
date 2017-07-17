@@ -1,7 +1,7 @@
 import boto3
 from nio.block.base import Block
 from nio.properties import (VersionProperty, PropertyHolder, StringProperty,
-                            ObjectProperty, FileProperty)
+                            ObjectProperty)
 from nio.util.discovery import not_discoverable
 
 
@@ -12,11 +12,14 @@ class AWSCreds(PropertyHolder):
         title="Secret Access Key", default="", allow_none=False)
     aws_session_token = StringProperty(
         title="Session Token", default="", allow_none=True)
+    region_name = StringProperty(
+        title="Region Name", default="us-east-2", allow_none=True)
+    # TODO: FIGURE OUT PROPERTY CONFIGURATION (unittest)
 
 
 @not_discoverable
-class SQSBase():
-    """ This is the base block for integrating n.io with AWS SQS"""
+class SQSBase(Block):
+    """This is the base block for integrating n.io with AWS SQS"""
     version = VersionProperty("1.0.0")
     creds = ObjectProperty(
         AWSCreds, title="AWS Credentials", default=AWSCreds())
@@ -32,6 +35,7 @@ class SQSBase():
         super().configure(context)
         self.client = boto3.client(
             'sqs',
+            region_name=self.creds().region_name(),
             aws_access_key_id=self.creds().aws_access_key_id(),
             aws_secret_access_key=self.creds().aws_secret_access_key(),
             aws_session_token=self.creds().aws_secret_access_key())
