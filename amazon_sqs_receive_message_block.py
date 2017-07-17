@@ -17,7 +17,7 @@ class SQSReceiveMessage(SQSBase):
     )
     # ^ AWS has defined possibilies here, should it just be text input?
     message_attribute_names = ListProperty(
-        title="Message Attribute to Return", default=[], allow_none=True)
+        title="Message Attribute to Return", default=[{}, {}], allow_none=True)
     max_number_of_messages = IntProperty(
         title="Max Number Messages to Receive", default=1, allow_none=True)
     visibility_timeout = IntProperty(
@@ -32,7 +32,7 @@ class SQSReceiveMessage(SQSBase):
         new_signals = []
         for signal in signals:
             try:
-                self.logger.debug("Sending message via {} queue".format(
+                self.logger.debug("Receiving message via {} queue".format(
                     self.queue_url(signal)))
                 response = self.client.receive_message(
                     QueueUrl=self.queue_url(signal),
